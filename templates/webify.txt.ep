@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+PUBLIC=0
+ONETIME=0
+
+# Set defaults
+PASTE_HOST='<%= $self->url_for('upload')->to_abs %>'
+
+while getopts ":op" opt; do
+  case $opt in
+    "p")
+      PUBLIC=1
+    ;;
+    "o")
+      ONETIME=1
+    ;;
+  esac
+done
+
+FILE=`basename "${@: -1}" | sed -e s/[^\]\[A-Za-z0-9._{}\(\)\-]/_/g`
+
+if [ "${@: -1}" = '-' ];
+then
+  curl -s -F "s=$PUBLIC" -F "o=$ONETIME" -F "p=@-;filename=stream" ${PASTE_HOST}
+else
+  if [ -d "${@: -1}" ]; then
+    tar -P -cf - "${@:-1}" | gzip | curl -s -F "s=$PUBLIC" -F "o=$ONETIME" -F "p=@-;filename=${FILE}.tar.gz" ${PASTE_HOST}
+  else
+    curl -s -F "s=$PUBLIC" -F "o=$ONETIME" -F "p=@${@: -1};filename=${FILE}" ${PASTE_HOST}
+  fi
+fi

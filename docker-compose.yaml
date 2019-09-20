@@ -1,0 +1,16 @@
+version: '2'
+
+services:
+  pastebin:
+    tty: true
+    stdin_open: true
+    image: pastebin:latest
+    container_name: pastebin
+    volumes:
+      - /storage/images/pastebin/config:/config
+      - /storage/images/pastebin/files:/files
+    restart: always
+    network_mode: host
+    ports:
+      - 0.0.0.0:80:80
+ 
