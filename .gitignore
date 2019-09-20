@@ -1,0 +1,4 @@
+files/*
+log/*
+pastebin.conf
+bin/hypnotoad.pid
