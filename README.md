@@ -1,1 +1,1 @@
-# SCN-App-Pastebin
+# Simple pastebin
