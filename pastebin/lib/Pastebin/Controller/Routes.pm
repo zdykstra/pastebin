@@ -6,6 +6,7 @@ use Mojo::File qw( path );
 use File::Basename;
 use Mojolicious::Types;
 use Net::Subnet qw( subnet_matcher );
+use Data::Dumper;
 
 sub webify {
   my $self        = shift;
@@ -16,7 +17,7 @@ sub downloads {
   my $self = shift;
 
   # Throw people out if they're not whitelisted
-  if ( $self->stash('limiter') eq 'private' ) {
+  if ( $self->stash('limiter') eq $self->config('private') ) {
     my $client_ip = $self->tx->original_remote_address;
     my $acl       = subnet_matcher( @{ $self->config('private_acl') } );
     unless ( $acl->($client_ip) ) {
@@ -79,7 +80,7 @@ sub downloads {
     }
   }
 
-  if ( $self->stash('prefix') eq 'onetime' ) {
+  if ( $self->stash('prefix') eq $self->config('onetime') ) {
     unlink $file;
   }
 }
@@ -90,9 +91,6 @@ sub upload {
   my $file     = $self->param('p');
   my $filename = $file->filename;
 
-  my $hash =
-    sha1_sum( $self->tx->original_remote_address . $self->tx->remote_port );
-
   my $path;
 
   if ( $self->param('o') ) {
@@ -102,20 +100,19 @@ sub upload {
   }
 
   if ( $self->param('s') ) {
-    $path = $path . $self->config('public') . $hash . '/';
+    $path = join( '/', $path,$self->config('public'),$self->tx->req->request_id);
   }
   else {
-    $path = $path . $self->config('private') . $hash . '/';
+    $path = join('/', $path,$self->config('private'),$self->tx->req->request_id);
   }
 
-
-  Mojo::File->new( $self->config('base') . $path )->make_path;
-  my $ondisk = $self->config('base') . $path . $filename;
+  my $ondisk = join('/',$self->config('base'),$path,$filename);
+  Mojo::File->new( join('/', $self->config('base'),$path) )->make_path;
   $file->move_to($ondisk);
 
   return $self->render(
     status => 200,
-    text   => $self->config('url') . $path . $filename . "\n"
+    text   => join('/', $self->config('url'),$path,$filename ) . "\n"
   );
 }
 1;

@@ -1,4 +1,5 @@
 files/*
+config/*
 log/*
 pastebin.conf
 bin/hypnotoad.pid

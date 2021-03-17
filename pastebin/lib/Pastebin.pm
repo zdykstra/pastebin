@@ -33,8 +33,8 @@ sub startup {
 
   $r->get(
     '/:prefix/:limiter/*' => [
-      prefix  => [ 'uploads', 'onetime', 'static' ],
-      limiter => [ 'public',  'private' ]
+      prefix  => [ $config->{regular}, $config->{onetime}, 'static' ],
+      limiter => [ $config->{public},  $config->{private} ]
     ]
   )->to( controller => 'Routes', action => 'downloads' );
   $r->post('/upload')->to( controller => 'Routes', action => 'upload' )->name('upload');

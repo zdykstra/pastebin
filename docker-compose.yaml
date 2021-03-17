@@ -7,10 +7,10 @@ services:
     image: pastebin:latest
     container_name: pastebin
     volumes:
-      - /storage/images/pastebin/config:/config
-      - /storage/images/pastebin/files:/files
+      - ./config:/config
+      - ./files:/files
     restart: always
     network_mode: host
     ports:
-      - 0.0.0.0:80:80
+      - 192.168.10.20:80:80
  

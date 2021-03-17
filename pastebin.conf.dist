@@ -1,25 +1,27 @@
 {
   SetUserGroup => {
-    user => "www-data",
-    group => "www-data",
+    user => "nobody",
+    group => "nogroup",
   },
 
   hypnotoad => {
     listen => [ 'http://*:80' ],
     workers => 10,
     inactivity_timeout => 1200,
+    proxy => 1,
   },
 
-  base        => '/usr/local/pastebin/files/',
-  regular     => 'uploads/',
-  onetime     => 'onetime/',
-  private     => 'private/',
-  public      => 'public/',
+  base        => '/files',
+  regular     => 'u',
+  onetime     => 'o',
+  private     => 'P',
+  public      => 'p',
 
-  url         => 'https://pastebin.domain.com',
+  url         => 'http://pastebin.your.domain',
   max_pp_size => '16777216',
 
   private_acl => [
     '127.0.0.1/32',
+    '192.168.0.0/16',
     ],
 }
