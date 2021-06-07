@@ -4,7 +4,9 @@ MAINTAINER dykstra.zachary@gmail.com
 WORKDIR /usr/local/pastebin
 
 COPY cpanfile .
-RUN xbps-install -y cpanminus make gcc openssl-devel file && cpanm --installdeps --notest .
+RUN xbps-install -Su && \
+    xbps-install -y cpanminus make gcc openssl-devel file && \
+    cpanm --installdeps --notest .
 
 COPY pastebin/ /usr/local/pastebin
 
