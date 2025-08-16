@@ -15,7 +15,7 @@ sub startup {
   my $config = $app->plugin('Config');
   $app->plugin('RenderFile');
 
-  $app->plugin(AccessLog => { log => '/usr/local/pastebin/log/access.log' });
+  $app->plugin( AccessLog => { log => '/usr/local/pastebin/log/access.log' } );
 
   if ( $> == 0 ) {
     $app->plugin(
@@ -34,7 +34,7 @@ sub startup {
   $r->get(
     '/:prefix/:limiter/*' => [
       prefix  => [ 'u', 'o', 'static' ],
-      limiter => [ 'p',  'P' ]
+      limiter => [ 'p', 'P' ]
     ]
   )->to( controller => 'Routes', action => 'downloads' );
   $r->post('/upload')->to( controller => 'Routes', action => 'upload' )->name('upload');

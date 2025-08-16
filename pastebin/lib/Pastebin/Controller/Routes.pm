@@ -8,7 +8,7 @@ use Mojolicious::Types;
 use Net::Subnet qw( subnet_matcher );
 
 sub webify {
-  my $self        = shift;
+  my $self = shift;
   return $self->render( template => 'webify', format => 'txt' );
 }
 
@@ -18,8 +18,7 @@ sub downloads {
   # Throw people out if they're not whitelisted
   if ( $self->stash('limiter') eq 'P' ) {
     my $client_ip = $self->tx->remote_address;
-    print "Client IP is $client_ip\n";
-    my $acl       = subnet_matcher( @{ $self->config('private_acl') } );
+    my $acl = subnet_matcher( @{ $self->config('private_acl') } );
     unless ( $acl->($client_ip) ) {
       $self->render( text => "Unauthorized", status => 401 );
       return;
@@ -48,18 +47,18 @@ sub downloads {
     || ( $size > $self->config('max_pp_size') ) )
   {
     $self->render_file(
-      'filepath'      => $file,
-      'content_type'  => $mimetype,
+      'filepath'     => $file,
+      'content_type' => $mimetype,
     );
-  }
 
-  else {
+  } else {
+
     # Render in the browser
     if ( ( $mimetype eq "application/pdf" )
       || ( $mimetype =~ m{video} )
       || ( $mimetype =~ m{image} )
       || ( $mimetype =~ m{html} )
-      || ( $file =~ m{ansible.out} ) )
+      || ( $file     =~ m{ansible.out} ) )
     {
       $self->render_file(
         'filepath'            => $file,
@@ -67,16 +66,18 @@ sub downloads {
         'content_disposition' => "inline"
       );
     }
+
     # Pretty print
     elsif ( $mimetype =~ m{text} ) {
       my $file_content = Mojo::File->new($file)->slurp;
       $self->stash( pretty => $file_content );
     }
+
     # Force a download
     else {
       $self->render_file(
-        'filepath'      => $file,
-        'content_type'  => $mimetype . "; charset=utf-8",
+        'filepath'     => $file,
+        'content_type' => $mimetype . "; charset=utf-8",
       );
     }
   }
@@ -92,42 +93,32 @@ sub upload {
   my $file     = $self->param('p');
   my $filename = $file->filename;
 
-  my $hash =
-    sha1_sum( $self->tx->original_remote_address . $self->tx->remote_port );
-  $hash = substr($hash, 0, 10);
+  my $hash = sha1_sum( $self->tx->original_remote_address . $self->tx->remote_port );
+  $hash = substr( $hash, 0, 10 );
 
   my $path;
 
   if ( $self->param('o') ) {
-    $path = $self->config('onetime'); 
-  } else { 
+    $path = $self->config('onetime');
+  } else {
     $path = $self->config('regular');
   }
 
   if ( $self->param('s') ) {
     $path = $path . $self->config('public') . $hash . '/';
-  }
-  else {
+  } else {
     $path = $path . $self->config('private') . $hash . '/';
   }
-
 
   Mojo::File->new( $self->config('base') . $path )->make_path;
   my $ondisk = $self->config('base') . $path . $filename;
   $file->move_to($ondisk);
 
-  my $url = $self->req->url->to_abs->scheme
-  		. "://"
-  		. $self->req->url->to_abs->host
-		. "/"
-		. $path
-		. $filename
-		. "\n";
+  my $url = $self->req->url->to_abs->scheme . "://" . $self->req->url->to_abs->host . "/" . $path . $filename . "\n";
 
   return $self->render(
     status => 200,
-    text   => $url, 
+    text   => $url,
   );
-  #text   => $self->config('url') . $path . $filename . "\n"
 }
 1;

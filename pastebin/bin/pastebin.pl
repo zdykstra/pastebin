@@ -23,7 +23,7 @@ L<PASTEBIN>, L<Mojolicious>
 use strict;
 use warnings;
 use File::Spec::Functions qw( catdir updir );
-use FindBin ();
+use FindBin               ();
 use lib "$FindBin::Bin/../lib";
 use lib "$FindBin::Bin/../extlib/perl5";
 
