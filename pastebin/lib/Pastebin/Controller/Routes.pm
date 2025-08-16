@@ -6,7 +6,6 @@ use Mojo::File qw( path );
 use File::Basename;
 use Mojolicious::Types;
 use Net::Subnet qw( subnet_matcher );
-use Data::Dumper;
 
 sub webify {
   my $self        = shift;
@@ -17,8 +16,9 @@ sub downloads {
   my $self = shift;
 
   # Throw people out if they're not whitelisted
-  if ( $self->stash('limiter') eq $self->config('private') ) {
-    my $client_ip = $self->tx->original_remote_address;
+  if ( $self->stash('limiter') eq 'P' ) {
+    my $client_ip = $self->tx->remote_address;
+    print "Client IP is $client_ip\n";
     my $acl       = subnet_matcher( @{ $self->config('private_acl') } );
     unless ( $acl->($client_ip) ) {
       $self->render( text => "Unauthorized", status => 401 );
@@ -56,6 +56,7 @@ sub downloads {
   else {
     # Render in the browser
     if ( ( $mimetype eq "application/pdf" )
+      || ( $mimetype =~ m{video} )
       || ( $mimetype =~ m{image} )
       || ( $mimetype =~ m{html} )
       || ( $file =~ m{ansible.out} ) )
@@ -75,12 +76,12 @@ sub downloads {
     else {
       $self->render_file(
         'filepath'      => $file,
-        'content_type'  => $mimetype,
+        'content_type'  => $mimetype . "; charset=utf-8",
       );
     }
   }
 
-  if ( $self->stash('prefix') eq $self->config('onetime') ) {
+  if ( $self->stash('prefix') eq 'onetime' ) {
     unlink $file;
   }
 }
@@ -91,6 +92,10 @@ sub upload {
   my $file     = $self->param('p');
   my $filename = $file->filename;
 
+  my $hash =
+    sha1_sum( $self->tx->original_remote_address . $self->tx->remote_port );
+  $hash = substr($hash, 0, 10);
+
   my $path;
 
   if ( $self->param('o') ) {
@@ -100,19 +105,29 @@ sub upload {
   }
 
   if ( $self->param('s') ) {
-    $path = join( '/', $path,$self->config('public'),$self->tx->req->request_id);
+    $path = $path . $self->config('public') . $hash . '/';
   }
   else {
-    $path = join('/', $path,$self->config('private'),$self->tx->req->request_id);
+    $path = $path . $self->config('private') . $hash . '/';
   }
 
-  my $ondisk = join('/',$self->config('base'),$path,$filename);
-  Mojo::File->new( join('/', $self->config('base'),$path) )->make_path;
+
+  Mojo::File->new( $self->config('base') . $path )->make_path;
+  my $ondisk = $self->config('base') . $path . $filename;
   $file->move_to($ondisk);
+
+  my $url = $self->req->url->to_abs->scheme
+  		. "://"
+  		. $self->req->url->to_abs->host
+		. "/"
+		. $path
+		. $filename
+		. "\n";
 
   return $self->render(
     status => 200,
-    text   => join('/', $self->config('url'),$path,$filename ) . "\n"
+    text   => $url, 
   );
+  #text   => $self->config('url') . $path . $filename . "\n"
 }
 1;
